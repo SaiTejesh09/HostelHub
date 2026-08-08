@@ -78,6 +78,21 @@ enum Shift {
   NIGHT
 }
 
+enum AnnouncementCategory {
+  GENERAL
+  ACADEMIC
+  MAINTENANCE
+  EVENT
+  EMERGENCY
+}
+
+enum AnnouncementPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 // ========================
 // CORE MODELS
 // ========================
@@ -104,6 +119,7 @@ model User {
   feedback        Feedback[]
   emailVerTokens  EmailVerification[]
   passwordResets  PasswordReset[]
+  announcements   Announcement[]
 
   @@index([email])
   @@index([role])
@@ -470,4 +486,32 @@ model ChatMessage {
 
   @@index([roomId])
   @@index([senderId])
+}
+
+// ========================
+// ANNOUNCEMENTS / NOTICE BOARD
+// ========================
+
+model Announcement {
+  id           String               @id @default(uuid())
+  title        String
+  content      String
+  priority     AnnouncementPriority  @default(MEDIUM)
+  category     AnnouncementCategory  @default(GENERAL)
+  authorId     String
+  targetRoles  String[]              // Which roles can see it, e.g. ["STUDENT","COMMITTEE"]
+  isPinned     Boolean               @default(false)
+  isActive     Boolean               @default(true)
+  expiresAt    DateTime?
+  attachmentUrl String?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  author       User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([category])
+  @@index([priority])
+  @@index([isPinned, isActive])
+  @@index([isActive, createdAt])
 }
