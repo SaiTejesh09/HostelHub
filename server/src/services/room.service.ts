@@ -82,7 +82,7 @@ export class RoomService {
             where: { isActive: true },
             include: {
               student: {
-                select: { id: true, name: true, rollNumber: true, department: true, year: true },
+                select: { id: true, name: true, rollNumber: true, department: true, year: true, phone: true },
               },
             },
           },
@@ -104,7 +104,7 @@ export class RoomService {
           where: { isActive: true },
           include: {
             student: {
-              include: { user: { select: { email: true, phone: true } } },
+              include: { user: { select: { email: true } } },
             },
           },
         },
@@ -150,11 +150,36 @@ export class RoomService {
       const student = await tx.studentProfile.findUnique({ where: { id: studentProfileId } });
       if (!student) throw createError('Student profile not found', 404);
 
-      // Deactivate any existing active allocation for this student
-      await tx.roomAllocation.updateMany({
+      // Check if student already has an active allocation and vacate previous room correctly
+      const previousAllocation = await tx.roomAllocation.findFirst({
         where: { studentProfileId, isActive: true },
-        data: { isActive: false, vacatedAt: new Date() },
+        include: { room: true },
       });
+
+      if (previousAllocation) {
+        // Deactivate previous allocation
+        await tx.roomAllocation.update({
+          where: { id: previousAllocation.id },
+          data: { isActive: false, vacatedAt: new Date() },
+        });
+
+        // Decrement previous room occupancy
+        const prevRoom = previousAllocation.room;
+        const prevNewOccupancy = Math.max(0, prevRoom.currentOccupancy - 1);
+        await tx.room.update({
+          where: { id: prevRoom.id },
+          data: {
+            currentOccupancy: prevNewOccupancy,
+            isAvailable: true,
+          },
+        });
+
+        // Decrement previous block occupancy
+        await tx.hostelBlock.update({
+          where: { id: prevRoom.blockId },
+          data: { currentOccupancy: { decrement: 1 } },
+        });
+      }
 
       // Create new allocation
       const allocation = await tx.roomAllocation.create({
@@ -165,7 +190,7 @@ export class RoomService {
         },
       });
 
-      // Update room occupancy & student profile
+      // Update new room occupancy & student profile
       const newOccupancy = room.currentOccupancy + 1;
       await tx.room.update({
         where: { id: roomId },
@@ -180,7 +205,7 @@ export class RoomService {
         data: { blockId: room.blockId, roomNumber: room.roomNumber },
       });
 
-      // Update block occupancy
+      // Update new block occupancy
       await tx.hostelBlock.update({
         where: { id: room.blockId },
         data: { currentOccupancy: { increment: 1 } },
