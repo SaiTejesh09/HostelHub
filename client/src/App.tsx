@@ -32,6 +32,7 @@ const CommitteeMenuPage = lazy(() => import('./pages/committee/CommitteeMenuPage
 const InventoryPage = lazy(() => import('./pages/committee/InventoryPage'));
 const AnalyticsPage = lazy(() => import('./pages/committee/AnalyticsPage'));
 const CommitteeNotificationsPage = lazy(() => import('./pages/committee/CommitteeNotificationsPage'));
+const ManageAnnouncementsPage = lazy(() => import('./pages/committee/ManageAnnouncementsPage'));
 const WorkersPage = lazy(() => import('./pages/committee/WorkersPage'));
 const CommitteeAttendanceMarkPage = lazy(() => import('./pages/committee/CommitteeAttendanceMarkPage'));
 
@@ -161,6 +162,11 @@ export default function App() {
             <Route path="/committee/notifications" element={
               <ProtectedRoute roles={['COMMITTEE', 'WARDEN']}>
                 <CommitteeNotificationsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/committee/announcements" element={
+              <ProtectedRoute roles={['COMMITTEE', 'WARDEN', 'ADMIN']}>
+                <ManageAnnouncementsPage />
               </ProtectedRoute>
             } />
             <Route path="/committee/workers" element={
