@@ -1,66 +1,75 @@
-# SmartHostel Management System
+# 🏨 SmartHostel Management System
 
-A comprehensive, full-stack platform designed to digitize and streamline hostel management operations. It features a role-based dashboard for Admins, Committee members, and Students, alongside real-time updates and integrated AI capabilities.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker)](https://www.docker.com/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#)
 
-**🌍 Live Demo:** [https://smarthostel-production-f1c8.up.railway.app](https://smarthostel-production-f1c8.up.railway.app)
+> **A comprehensive, next-generation platform designed to digitize, streamline, and automate hostel management operations.** 
+> Featuring real-time updates, microservice architecture, and integrated AI capabilities.
 
-## 🚀 Features
+🌍 **Live Demo:** [smarthostel-production-f1c8.up.railway.app](https://smarthostel-production-f1c8.up.railway.app)
 
-- **Role-Based Access Control:** Dedicated portals for Admin, Committee, and Students.
-- **Attendance Tracking:** Real-time attendance monitoring via QR code scanning (isolated microservice).
-- **Complaints & Maintenance:** Track, manage, and resolve hostel issues with sentiment analysis.
-- **Mess Menu Management:** View and update daily/weekly mess menus.
-- **Rebates & Payments:** Built-in Razorpay integration for handling hostel fees and mess rebates.
-- **Inventory Management:** Keep track of hostel assets and stock levels.
-- **Real-Time Notifications:** Instant alerts powered by Socket.io and an async email notification worker.
-- **AI Chat & Feedback:** Intelligent chat assistant and sentiment analysis for complaints/feedback — built into the core API.
-- **Analytics & Dashboards:** Visual data representation using Recharts.
-- **Google OAuth:** Sign in with Google alongside traditional JWT auth.
+---
 
-## 💻 Tech Stack
+## ✨ Key Features
 
-### Frontend (Client)
-- **Framework:** React 18 with TypeScript & Vite
-- **Styling:** Tailwind CSS v4, Lucide React
-- **State Management:** Zustand, TanStack React Query v5
-- **Forms & Validation:** React Hook Form, Zod
-- **Routing:** React Router DOM v6
-- **Real-Time:** Socket.io-client
-- **QR Code:** html5-qrcode, react-qr-scanner, qrcode (generation)
-- **UI Utilities:** clsx, tailwind-merge, react-hot-toast, date-fns, axios
-- **Analytics:** Recharts
+*   🔐 **Role-Based Access Control:** Dedicated portals tailored for Admins, Committee members, and Students.
+*   📱 **QR-Powered Attendance:** High-frequency, real-time meal and attendance tracking via an isolated microservice.
+*   🧠 **AI Chat & Sentiment Analysis:** Intelligent chat assistant and automated sentiment tracking for complaints and feedback.
+*   💳 **Rebates & Payments:** Built-in Razorpay integration for seamless handling of hostel fees and mess rebates.
+*   ⚡ **Real-Time Infrastructure:** Instant alerts powered by Socket.io and an asynchronous Redis-backed email notification worker.
+*   📊 **Analytics & Dashboards:** Beautiful, interactive visual data representations using Recharts.
+*   🔑 **Omni-Auth:** Secure sign-in via Google OAuth 2.0 alongside traditional JWT authentication.
+*   📦 **Inventory & Mess Management:** Comprehensive tracking of hostel assets, stock levels, and dynamic mess menus.
 
-### Backend (Core API — `server/`)
-- **Runtime:** Node.js with Express 5 & TypeScript
-- **Database:** PostgreSQL with Prisma ORM v6
-- **Caching & Pub/Sub:** Redis (ioRedis)
-- **Authentication:** JWT (access + refresh tokens), bcryptjs, Google OAuth 2.0
-- **Payments:** Razorpay
-- **Real-Time:** Socket.io (WebSockets)
-- **Email:** Nodemailer (via SMTP / SendGrid)
-- **Background Jobs:** node-cron (scheduled tasks)
-- **Middleware & Security:** Helmet, CORS, Express Rate Limit, compression, cookie-parser, morgan
-- **Validation:** Zod
-- **Logging:** Winston, winston-daily-rotate-file
-- **Utilities:** uuid, axios
+---
 
-### Microservices (`services/`)
+## 🛠️ The Tech Stack
 
-#### Attendance Service (`services/attendance-service/`)
-- **Purpose:** Isolated high-frequency meal/attendance marking with its own failure domain.
-- **Stack:** Node.js, Express 5, TypeScript, Prisma v6, ioRedis, JWT
-- **RBAC:** Committee / Warden / Admin only; ABAC prevents self-marking.
-- **Port:** `5002`
+### Frontend Architecture
+Built for speed, type-safety, and interactive user experiences.
 
-#### Notification Worker (`services/notification-worker/`)
-- **Purpose:** Decoupled async email delivery — subscribes to a Redis `notifications:email` pub/sub channel. If this crashes, the main API keeps running.
-- **Stack:** Node.js, TypeScript, ioRedis, Nodemailer
-- **No exposed port** — worker only, not a server.
+[![Frontend Skills](https://skillicons.dev/icons?i=react,ts,vite,tailwind,zustand)](https://skillicons.dev)
 
-### Infrastructure
-- **Containerization:** Docker & Docker Compose
-- **Database Services:** PostgreSQL 16-alpine, Redis 7-alpine
-- **Deployment:** Railway (backend + frontend), nginx (frontend static serving in Docker)
+*   **Core:** React 18, TypeScript, Vite
+*   **Styling:** Tailwind CSS v4, Lucide React
+*   **State & Fetching:** Zustand, TanStack React Query v5
+*   **Routing & Forms:** React Router DOM v6, React Hook Form, Zod
+*   **Utilities:** Socket.io-client, Recharts, html5-qrcode
+
+### Core Backend API
+A robust, high-performance runtime handling core business logic.
+
+[![Backend Skills](https://skillicons.dev/icons?i=nodejs,express,ts,postgres,prisma,redis)](https://skillicons.dev)
+
+*   **Core:** Node.js, Express 5, TypeScript
+*   **Data Layer:** PostgreSQL 16, Prisma ORM v6
+*   **Caching & Pub/Sub:** Redis (ioRedis)
+*   **Security & Auth:** JWT, bcryptjs, Google OAuth, Helmet, Rate Limiting
+*   **Integrations:** Razorpay, Socket.io, Nodemailer, node-cron
+
+### DevOps & Infrastructure
+Containerized for seamless deployment and isolated failure domains.
+
+[![DevOps Skills](https://skillicons.dev/icons?i=docker,nginx,github)](https://skillicons.dev)
+
+*   **Containers:** Docker & Docker Compose
+*   **Cloud/Deployment:** Railway, Nginx (Static Serving)
+
+---
+
+## 🏗️ Microservices Architecture
+
+To ensure high availability and decoupled scaling, SmartHostel breaks out critical background tasks from the main API.
+
+1.  **Attendance Service (`Port 5002`)**
+    *   *Purpose:* Isolated high-frequency meal/attendance marking with its own failure domain.
+    *   *Security:* RBAC (Committee/Warden/Admin) with ABAC preventing self-marking.
+2.  **Notification Worker (`No Exposed Port`)**
+    *   *Purpose:* Decoupled async email delivery via Nodemailer. Subscribes to a Redis `notifications:email` pub/sub channel. Keeps the main API fast and crash-resilient.
+
+---
 
 ## 📁 Project Structure
 
@@ -78,18 +87,12 @@ SmartHostel/
 │       ├── controllers/      # Route handlers
 │       ├── routes/           # API route definitions
 │       ├── services/         # Business logic
-│       ├── middleware/        # Auth, error handling, etc.
 │       ├── sockets/          # Socket.io event handlers
-│       ├── jobs/             # Background cron jobs
-│       ├── config/           # DB, Redis, env config
-│       ├── validators/       # Zod schemas
-│       └── utils/            # Logger, helpers
+│       └── jobs/             # Background cron jobs
 ├── services/
-│   ├── attendance-service/   # Attendance microservice (port 5002)
-│   └── notification-worker/  # Async email worker (Redis pub/sub)
-├── docker-compose.yml        # Orchestrates Postgres, Redis, Backend, Attendance, Notification Worker, Frontend
-└── ...
-```
+│   ├── attendance-service/   # Isolated attendance microservice
+│   └── notification-worker/  # Async Redis pub/sub email worker
+└── docker-compose.yml        # Orchestrates the entire ecosystem
 
 ## 🛠️ Getting Started
 
