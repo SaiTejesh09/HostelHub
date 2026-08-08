@@ -30,6 +30,7 @@ import workerRoutes from './routes/worker.routes';
 import adminRoutes from './routes/admin.routes';
 import feedbackRoutes from './routes/feedback.routes';
 import chatRoutes from './routes/chat.routes';
+import announcementRoutes from './routes/announcement.routes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -143,6 +144,7 @@ app.use('/api/v1/workers', workerRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/feedback', feedbackRoutes);
 app.use('/api/v1/chat', chatRoutes);
+app.use('/api/v1/announcements', announcementRoutes);
 
 // ── 404 & Error Handling ───────────────────────────────────────────────────
 app.use(notFound);
