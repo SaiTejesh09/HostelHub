@@ -21,6 +21,7 @@ const RebatesPage = lazy(() => import('./pages/student/RebatesPage'));
 const MenuPage = lazy(() => import('./pages/student/MenuPage'));
 const AttendancePage = lazy(() => import('./pages/student/AttendancePage'));
 const NotificationsPage = lazy(() => import('./pages/student/NotificationsPage'));
+const AnnouncementsPage = lazy(() => import('./pages/student/AnnouncementsPage'));
 const ChatPage = lazy(() => import('./pages/student/ChatPage'));
 
 // Committee pages
@@ -113,6 +114,11 @@ export default function App() {
             <Route path="/student/notifications" element={
               <ProtectedRoute roles={['STUDENT']}>
                 <NotificationsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/announcements" element={
+              <ProtectedRoute roles={['STUDENT', 'COMMITTEE', 'WARDEN', 'ADMIN']}>
+                <AnnouncementsPage />
               </ProtectedRoute>
             } />
             <Route path="/student/chat" element={

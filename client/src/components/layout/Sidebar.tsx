@@ -21,6 +21,7 @@ import {
   GraduationCap,
   X,
   CheckSquare,
+  Megaphone,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useLayoutStore } from '../../stores/layoutStore';
@@ -38,6 +39,7 @@ const studentNav: NavItem[] = [
   { to: '/student/complaints', icon: <MessageSquare size={18} />, label: 'Complaints' },
   { to: '/student/rebates', icon: <Calendar size={18} />, label: 'Rebates' },
   { to: '/student/attendance', icon: <ClipboardList size={18} />, label: 'Attendance' },
+  { to: '/student/announcements', icon: <Megaphone size={18} />, label: 'Notice Board' },
   { to: '/student/notifications', icon: <Bell size={18} />, label: 'Notifications' },
 ];
 
@@ -50,6 +52,7 @@ const committeeNav: NavItem[] = [
   { to: '/committee/inventory', icon: <Package size={18} />, label: 'Inventory' },
   { to: '/committee/workers', icon: <Briefcase size={18} />, label: 'Workers' },
   { to: '/committee/feedback', icon: <Star size={18} />, label: 'Feedback' },
+  { to: '/committee/announcements', icon: <Megaphone size={18} />, label: 'Announcements' },
   { to: '/committee/analytics', icon: <BarChart3 size={18} />, label: 'Analytics' },
   { to: '/committee/notifications', icon: <Bell size={18} />, label: 'Notifications' },
 ];
