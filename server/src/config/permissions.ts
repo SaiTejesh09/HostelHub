@@ -48,7 +48,11 @@ export type Permission =
   | 'INVITE_USER'
   // Feedback
   | 'SUBMIT_FEEDBACK'
-  | 'VIEW_FEEDBACK';
+  | 'VIEW_FEEDBACK'
+  // Announcements
+  | 'CREATE_ANNOUNCEMENT'
+  | 'MANAGE_ANNOUNCEMENT'
+  | 'VIEW_ANNOUNCEMENTS';
 
 // ── RBAC Matrix ─────────────────────────────────────────────────────────────
 // Maps permission → roles that are allowed
@@ -99,6 +103,11 @@ const PERMISSION_MATRIX: Record<Permission, Role[]> = {
   // Feedback
   SUBMIT_FEEDBACK:         ['STUDENT', 'COMMITTEE'],
   VIEW_FEEDBACK:           ['COMMITTEE', 'WARDEN', 'ADMIN'],
+
+  // Announcements
+  CREATE_ANNOUNCEMENT:     ['COMMITTEE', 'WARDEN', 'ADMIN'],
+  MANAGE_ANNOUNCEMENT:     ['WARDEN', 'ADMIN'],
+  VIEW_ANNOUNCEMENTS:      ['STUDENT', 'COMMITTEE', 'WARDEN', 'ADMIN'],
 };
 
 /**
