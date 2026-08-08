@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Megaphone, Pin, Calendar, Tag, AlertCircle, Filter } from 'lucide-react';
+import { Megaphone, Pin, Calendar, AlertCircle, Filter } from 'lucide-react';
 import api from '../../lib/api';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
