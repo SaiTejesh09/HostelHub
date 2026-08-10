@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import StatCard from '../../components/ui/StatCard';
+import { RoomSelection } from '../../components/rooms/RoomSelection';
 import api from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -69,6 +70,20 @@ export default function StudentDashboard() {
           </h1>
           <p className="page-subtitle">Here's what's happening today</p>
         </div>
+
+        {/* Room Selection Banner if no room is assigned */}
+        {user?.profile && !user.profile.roomNumber && (
+          <div className="mb-8">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+              <h3 className="text-amber-800 font-semibold mb-1">Action Required: Room Allocation</h3>
+              <p className="text-amber-700 text-sm">You haven't been allocated a room yet. Please select an available room from the list below to complete your hostel registration.</p>
+            </div>
+            <RoomSelection 
+              studentProfileId={user.profile.id} 
+              onRoomAllocated={() => window.location.reload()} 
+            />
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="stats-grid">
