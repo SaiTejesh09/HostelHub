@@ -100,6 +100,13 @@ enum AnnouncementPriority {
   URGENT
 }
 
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
 // ========================
 // CORE MODELS
 // ========================
@@ -107,7 +114,7 @@ enum AnnouncementPriority {
 model User {
   id              String   @id @default(uuid())
   email           String   @unique
-  passwordHash    String?  // Nullable: Google OAuth users have no password
+  passwordHash    String? // Nullable: Google OAuth users have no password
   role            Role     @default(STUDENT)
   primaryRole     Role     @default(STUDENT) // Original base role — never changed on elevation
   isEmailVerified Boolean  @default(false)
@@ -115,18 +122,18 @@ model User {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  studentProfile  StudentProfile?
-  googleAccount   GoogleAccount?
-  notifications   Notification[]
-  complaints      Complaint[]
-  responses       ComplaintResponse[]
-  rebates         Rebate[]
-  attendance      Attendance[]
-  sentMessages    ChatMessage[]      @relation("SentMessages")
-  feedback        Feedback[]
-  emailVerTokens  EmailVerification[]
-  passwordResets  PasswordReset[]
-  announcements   Announcement[]
+  studentProfile StudentProfile?
+  googleAccount  GoogleAccount?
+  notifications  Notification[]
+  complaints     Complaint[]
+  responses      ComplaintResponse[]
+  rebates        Rebate[]
+  attendance     Attendance[]
+  sentMessages   ChatMessage[]       @relation("SentMessages")
+  feedback       Feedback[]
+  emailVerTokens EmailVerification[]
+  passwordResets PasswordReset[]
+  announcements  Announcement[]
 
   @@index([email])
   @@index([role])
@@ -135,14 +142,14 @@ model User {
 
 // OAuth: one Google account per User
 model GoogleAccount {
-  id           String   @id @default(uuid())
-  userId       String   @unique
-  googleId     String   @unique
-  displayName  String?
-  avatarUrl    String?
-  createdAt    DateTime @default(now())
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  googleId    String   @unique
+  displayName String?
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
 
-  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([googleId])
 }
@@ -155,7 +162,7 @@ model EmailVerification {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([userId])
@@ -168,7 +175,7 @@ model PasswordReset {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
 }
@@ -176,13 +183,13 @@ model PasswordReset {
 // Idempotency: prevents duplicate writes from client retries
 // Store idempotency key → result for 24h
 model IdempotencyKey {
-  id         String   @id @default(uuid())
-  key        String   @unique
-  userId     String
-  resource   String   // e.g. "rebate", "complaint"
-  result     Json     // Cached response body
-  createdAt  DateTime @default(now())
-  expiresAt  DateTime
+  id        String   @id @default(uuid())
+  key       String   @unique
+  userId    String
+  resource  String // e.g. "rebate", "complaint"
+  result    Json // Cached response body
+  createdAt DateTime @default(now())
+  expiresAt DateTime
 
   @@index([key])
   @@index([userId, resource])
@@ -206,6 +213,7 @@ model StudentProfile {
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   block       HostelBlock?     @relation(fields: [blockId], references: [id])
   allocations RoomAllocation[]
+  bookings    RoomBooking[]
 
   @@index([rollNumber])
   @@index([blockId])
@@ -227,21 +235,22 @@ model HostelBlock {
 }
 
 model Room {
-  id               String       @id @default(uuid())
+  id               String   @id @default(uuid())
   blockId          String
   roomNumber       String
   floor            Int
-  capacity         Int          @default(2)
-  currentOccupancy Int          @default(0)
-  type             RoomType     @default(DOUBLE)
-  isAvailable      Boolean      @default(true)
+  capacity         Int      @default(2)
+  currentOccupancy Int      @default(0)
+  type             RoomType @default(DOUBLE)
+  isAvailable      Boolean  @default(true)
   amenities        String[]
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   block       HostelBlock      @relation(fields: [blockId], references: [id], onDelete: Cascade)
   allocations RoomAllocation[]
   beds        Bed[]
+  bookings    RoomBooking[]
 
   @@unique([blockId, roomNumber])
   @@index([blockId])
@@ -249,14 +258,14 @@ model Room {
 }
 
 model Bed {
-  id          String   @id @default(uuid())
-  roomId      String
-  bedNumber   String
-  isOccupied  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  roomId     String
+  bedNumber  String
+  isOccupied Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room        Room             @relation(fields: [roomId], references: [id], onDelete: Cascade)
   allocations RoomAllocation[]
 
   @@unique([roomId, bedNumber])
@@ -284,19 +293,38 @@ model RoomAllocation {
   @@index([isActive])
 }
 
+model RoomBooking {
+  id               String        @id @default(uuid())
+  studentProfileId String
+  roomId           String
+  status           BookingStatus @default(PENDING)
+  notes            String?
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  student StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  room    Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([studentProfileId])
+  @@index([roomId])
+  @@index([status])
+}
+
 // ========================
 // MENU & MEALS
 // ========================
 
 model Menu {
-  id          String       @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   description String?
-  isActive    Boolean      @default(true)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  schedules   MealSchedule[]
+  schedules MealSchedule[]
 }
 
 model MealItem {
@@ -309,24 +337,24 @@ model MealItem {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  schedules   MealSchedule[] @relation("MealItems")
+  schedules MealSchedule[] @relation("MealItems")
 }
 
 model MealSchedule {
-  id          String   @id @default(uuid())
-  menuId      String
-  mealType    MealType
-  dayOfWeek   Int      // 0=Sunday, 6=Saturday
-  date        DateTime?
-  startTime   String
-  endTime     String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String    @id @default(uuid())
+  menuId    String
+  mealType  MealType
+  dayOfWeek Int // 0=Sunday, 6=Saturday
+  date      DateTime?
+  startTime String
+  endTime   String
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  menu        Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  items       MealItem[] @relation("MealItems")
-  attendance  Attendance[]
+  menu       Menu         @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  items      MealItem[]   @relation("MealItems")
+  attendance Attendance[]
 
   @@index([menuId])
   @@index([mealType])
@@ -349,8 +377,8 @@ model Complaint {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
-  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  responses   ComplaintResponse[]
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses ComplaintResponse[]
 
   @@index([userId])
   @@index([status])
@@ -364,8 +392,8 @@ model ComplaintResponse {
   message     String
   createdAt   DateTime @default(now())
 
-  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([complaintId])
 }
@@ -377,24 +405,24 @@ model ComplaintResponse {
 // ========================
 
 model Rebate {
-  id          String       @id @default(uuid())
-  userId      String
-  fromDate    DateTime
-  toDate      DateTime
-  reason      String
-  status      RebateStatus @default(PENDING)
-  reviewedBy  String?
-  reviewNote  String?
-  reviewedAt  DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id         String       @id @default(uuid())
+  userId     String
+  fromDate   DateTime
+  toDate     DateTime
+  reason     String
+  status     RebateStatus @default(PENDING)
+  reviewedBy String?
+  reviewNote String?
+  reviewedAt DateTime?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
-  @@index([userId, status])           // Composite for overlap check queries
-  @@index([fromDate, toDate])         // Composite for date range queries
+  @@index([userId, status]) // Composite for overlap check queries
+  @@index([fromDate, toDate]) // Composite for date range queries
 }
 
 // ========================
@@ -414,7 +442,7 @@ model InventoryItem {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  purchases       Purchase[]
+  purchases Purchase[]
 
   @@index([name])
   @@index([category])
@@ -432,7 +460,7 @@ model Purchase {
   purchaseDate  DateTime @default(now())
   createdAt     DateTime @default(now())
 
-  item          InventoryItem @relation(fields: [itemId], references: [id])
+  item InventoryItem @relation(fields: [itemId], references: [id])
 
   @@index([itemId])
   @@index([purchasedBy])
@@ -453,7 +481,7 @@ model Notification {
   metadata  Json?
   createdAt DateTime         @default(now())
 
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([isRead])
@@ -469,21 +497,21 @@ model Notification {
 // ========================
 
 model Attendance {
-  id             String           @id @default(uuid())
-  userId         String           // Student being marked
-  scheduleId     String
-  status         AttendanceStatus
-  markedById     String?          // Committee member who marked it (ABAC audit trail)
-  markedAt       DateTime         @default(now())
+  id         String           @id @default(uuid())
+  userId     String // Student being marked
+  scheduleId String
+  status     AttendanceStatus
+  markedById String? // Committee member who marked it (ABAC audit trail)
+  markedAt   DateTime         @default(now())
 
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  schedule       MealSchedule @relation(fields: [scheduleId], references: [id])
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schedule MealSchedule @relation(fields: [scheduleId], references: [id])
 
   @@unique([userId, scheduleId])
   @@index([userId])
   @@index([scheduleId])
   @@index([markedById])
-  @@index([userId, markedAt])      // For monthly attendance reports
+  @@index([userId, markedAt]) // For monthly attendance reports
 }
 
 // ========================
@@ -491,14 +519,14 @@ model Attendance {
 // ========================
 
 model Feedback {
-  id          String   @id @default(uuid())
-  userId      String
-  scheduleId  String?
-  rating      Int      // 1-5
-  comment     String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  userId     String
+  scheduleId String?
+  rating     Int // 1-5
+  comment    String?
+  createdAt  DateTime @default(now())
 
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([rating])
@@ -509,18 +537,18 @@ model Feedback {
 // ========================
 
 model Worker {
-  id           String   @id @default(uuid())
-  name         String
-  phone        String
-  email        String?  @unique
-  designation  String
-  shift        Shift    @default(MORNING)
-  salary       Float
-  joiningDate  DateTime @default(now())
-  isActive     Boolean  @default(true)
-  notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(uuid())
+  name        String
+  phone       String
+  email       String?  @unique
+  designation String
+  shift       Shift    @default(MORNING)
+  salary      Float
+  joiningDate DateTime @default(now())
+  isActive    Boolean  @default(true)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([shift])
   @@index([isActive])
@@ -537,19 +565,19 @@ model ChatRoom {
   isGroup   Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  messages  ChatMessage[]
+  messages ChatMessage[]
 }
 
 model ChatMessage {
-  id         String   @id @default(uuid())
-  roomId     String
-  senderId   String
-  message    String
-  isRead     Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  roomId    String
+  senderId  String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 
-  room       ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([roomId])
   @@index([senderId])
@@ -560,21 +588,21 @@ model ChatMessage {
 // ========================
 
 model Announcement {
-  id           String               @id @default(uuid())
-  title        String
-  content      String
-  priority     AnnouncementPriority  @default(MEDIUM)
-  category     AnnouncementCategory  @default(GENERAL)
-  authorId     String
-  targetRoles  String[]              // Which roles can see it, e.g. ["STUDENT","COMMITTEE"]
-  isPinned     Boolean               @default(false)
-  isActive     Boolean               @default(true)
-  expiresAt    DateTime?
+  id            String               @id @default(uuid())
+  title         String
+  content       String
+  priority      AnnouncementPriority @default(MEDIUM)
+  category      AnnouncementCategory @default(GENERAL)
+  authorId      String
+  targetRoles   String[] // Which roles can see it, e.g. ["STUDENT","COMMITTEE"]
+  isPinned      Boolean              @default(false)
+  isActive      Boolean              @default(true)
+  expiresAt     DateTime?
   attachmentUrl String?
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 
-  author       User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([authorId])
   @@index([category])
