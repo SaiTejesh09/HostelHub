@@ -41,6 +41,7 @@ const studentNav: NavItem[] = [
   { to: '/student/attendance', icon: <ClipboardList size={18} />, label: 'Attendance' },
   { to: '/student/announcements', icon: <Megaphone size={18} />, label: 'Notice Board' },
   { to: '/student/notifications', icon: <Bell size={18} />, label: 'Notifications' },
+  { to: '/student/bookings', icon: <Bed size={18} />, label: 'Room Booking' },
 ];
 
 const committeeNav: NavItem[] = [
