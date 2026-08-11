@@ -32,6 +32,7 @@ import feedbackRoutes from './routes/feedback.routes';
 import chatRoutes from './routes/chat.routes';
 import announcementRoutes from './routes/announcement.routes';
 import roomRoutes from './routes/room.routes';
+import bookingRoutes from './routes/booking.routes';
 const app = express();
 const httpServer = createServer(app);
 
@@ -146,6 +147,7 @@ app.use('/api/v1/feedback', feedbackRoutes);
 app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1/announcements', announcementRoutes);
 app.use('/api/v1/rooms', roomRoutes);
+app.use('/api/v1/bookings', bookingRoutes);
 
 // ── 404 & Error Handling ───────────────────────────────────────────────────
 app.use(notFound);
