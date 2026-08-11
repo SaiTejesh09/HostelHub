@@ -4,6 +4,9 @@ import { abacPolicies } from '../config/permissions';
 import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 import { getRedisClient } from '../config/redis';
 import { logger } from '../utils/logger';
+import jwt from 'jsonwebtoken';
+import env from '../config/env';
+import QRCode from 'qrcode';
 
 // Cache key: tracks if attendance already marked for a schedule today
 const attendanceCacheKey = (userId: string, scheduleId: string) =>
@@ -263,6 +266,54 @@ export class AttendanceService {
       attendanceStatus: attendanceMap.get(s.userId)?.status ?? null,
       markedAt: attendanceMap.get(s.userId)?.markedAt ?? null,
     }));
+  }
+
+  // ── Generate Daily Check-in QR Token (STUDENT) ────────────────────────────
+  async generateDailyQR(userId: string, type: 'MEAL' | 'NIGHT_CHECKIN' | 'GATE_ENTRY' | 'EVENT' = 'NIGHT_CHECKIN') {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { studentProfile: true },
+    });
+    if (!user) throw createError('User not found', 404);
+
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const payload = {
+      userId,
+      type,
+      rollNumber: user.studentProfile?.rollNumber || '',
+      name: user.studentProfile?.name || '',
+      timestamp: Date.now(),
+      exp: Math.floor(expiresAt.getTime() / 1000),
+    };
+
+    const qrToken = jwt.sign(payload, env.JWT_SECRET);
+    const qrDataUrl = await QRCode.toDataURL(qrToken);
+
+    const record = await prisma.dailyAttendance.upsert({
+      where: { qrToken },
+      create: {
+        userId,
+        type,
+        status: 'PRESENT',
+        qrToken,
+      },
+      update: {
+        status: 'PRESENT',
+      },
+    });
+
+    logger.info(`Generated ${type} QR token for user ${userId}`);
+
+    return {
+      id: record.id,
+      userId,
+      type,
+      qrToken,
+      qrDataUrl,
+      expiresAt: expiresAt.toISOString(),
+      studentName: user.studentProfile?.name,
+      rollNumber: user.studentProfile?.rollNumber,
+    };
   }
 }
 

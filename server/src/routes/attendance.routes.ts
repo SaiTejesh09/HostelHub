@@ -12,6 +12,9 @@ router.get('/my', requirePermission('VIEW_OWN_ATTENDANCE'), attendanceController
 // Student/All: stats
 router.get('/stats', requirePermission('VIEW_OWN_ATTENDANCE'), attendanceController.getStats.bind(attendanceController));
 
+// Student: generate daily check-in QR code
+router.get('/qr/generate', requirePermission('VIEW_OWN_ATTENDANCE'), attendanceController.generateDailyQR.bind(attendanceController));
+
 // Committee+: view all attendance
 router.get('/', requirePermission('VIEW_ALL_ATTENDANCE'), attendanceController.getAllAttendance.bind(attendanceController));
 

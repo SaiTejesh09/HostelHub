@@ -71,6 +71,16 @@ export class AttendanceController {
       next(error);
     }
   }
+
+  async generateDailyQR(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const type = (req.query.type as any) || 'NIGHT_CHECKIN';
+      const result = await attendanceService.generateDailyQR(req.user!.userId, type);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const attendanceController = new AttendanceController();
