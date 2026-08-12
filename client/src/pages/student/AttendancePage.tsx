@@ -7,8 +7,9 @@
  * RBAC: Student can only see their own records (enforced on API via ABAC).
  */
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ClipboardList, CheckCircle2, XCircle, BarChart3, Loader2, Calendar } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { ClipboardList, CheckCircle2, XCircle, BarChart3, Loader2, Calendar, QrCode, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
@@ -43,6 +44,13 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export default function AttendancePage() {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
+  const [qrData, setQrData] = useState<{qrDataUrl: string, expiresAt: string} | null>(null);
+
+  const generateQrMutation = useMutation({
+    mutationFn: () => api.get('/attendance/qr/generate').then(r => r.data.data),
+    onSuccess: (data) => setQrData(data),
+    onError: () => toast.error('Failed to generate QR code')
+  });
 
   const { data: statsData } = useQuery<AttendanceStats>({
     queryKey: ['my-attendance-stats'],
@@ -61,15 +69,49 @@ export default function AttendancePage() {
     <DashboardLayout title="My Attendance">
     <div style={{ padding: '24px 20px', maxWidth: 900, margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <ClipboardList size={26} color="var(--color-primary)" />
-          My Attendance
-        </h1>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
-          Attendance is marked by committee members at meal time.
-        </p>
+      <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <ClipboardList size={26} color="var(--color-primary)" />
+            My Attendance
+          </h1>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
+            View your attendance history and generate check-in QR codes.
+          </p>
+        </div>
+        <button 
+          className="btn btn-primary" 
+          onClick={() => generateQrMutation.mutate()}
+          disabled={generateQrMutation.isPending}
+        >
+          {generateQrMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <QrCode size={18} />}
+          Show Check-in QR
+        </button>
       </div>
+
+      {/* QR Code Modal */}
+      {qrData && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 20 }}>
+          <div className="card" style={{ padding: 24, width: '100%', maxWidth: 400, textAlign: 'center', position: 'relative' }}>
+            <button 
+              onClick={() => setQrData(null)}
+              style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}
+            >
+              <X size={20} />
+            </button>
+            <div style={{ display: 'inline-flex', padding: 12, background: 'rgba(99,102,241,0.1)', color: '#6366f1', borderRadius: '50%', marginBottom: 16 }}>
+              <QrCode size={32} />
+            </div>
+            <h3 style={{ fontSize: 20, marginBottom: 8 }}>Your Check-in QR</h3>
+            <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 20 }}>
+              Show this QR code to the scanner. Valid until {new Date(qrData.expiresAt).toLocaleTimeString('en-IN')}.
+            </p>
+            <div style={{ background: '#fff', padding: 16, borderRadius: 12, border: '2px dashed var(--color-border)', display: 'inline-block' }}>
+              <img src={qrData.qrDataUrl} alt="QR Code" style={{ width: 250, height: 250 }} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, marginBottom: 32 }}>
