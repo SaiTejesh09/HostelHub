@@ -14,11 +14,12 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, XCircle, Users, ChevronDown, Loader2, Save, CheckSquare, Search } from 'lucide-react';
+import { CheckCircle2, XCircle, Users, ChevronDown, Loader2, Save, CheckSquare, Search, QrCode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { useAuthStore } from '../../stores/authStore';
+import QRScanner from '../../components/attendance/QRScanner';
 
 interface Schedule {
   id: string;
@@ -50,6 +51,7 @@ export default function CommitteeAttendanceMarkPage() {
   const [selectedScheduleId, setSelectedScheduleId] = useState<string>('');
   const [pendingMarks, setPendingMarks] = useState<Record<string, 'PRESENT' | 'ABSENT'>>({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
 
   // Fetch today's active schedules
   const { data: schedulesData } = useQuery({
@@ -212,6 +214,9 @@ export default function CommitteeAttendanceMarkPage() {
             <button className="btn btn-sm" onClick={() => markAll('ABSENT')} style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' }}>
               <XCircle size={14} /> Mark All Absent
             </button>
+            <button className="btn btn-sm" onClick={() => setShowScanner(!showScanner)} style={{ background: '#e0e7ff', color: '#3730a3', border: '1px solid #c7d2fe' }}>
+              <QrCode size={14} /> {showScanner ? 'Hide Scanner' : 'Scan QR'}
+            </button>
             {pendingCount > 0 && (
               <button
                 id="save-attendance-btn"
@@ -225,6 +230,21 @@ export default function CommitteeAttendanceMarkPage() {
               </button>
             )}
           </div>
+
+          {showScanner && (
+            <div style={{ marginBottom: 20 }}>
+              <QRScanner
+                onScanSuccess={(text) => {
+                  toast.success(`Scanned QR successfully!`);
+                  // To be wired to backend in commit 14
+                  console.log('Decoded QR:', text);
+                }}
+                onScanFailure={(err) => {
+                  console.error('QR Scan Error:', err);
+                }}
+              />
+            </div>
+          )}
 
           {/* Student List */}
           {studentsLoading ? (
