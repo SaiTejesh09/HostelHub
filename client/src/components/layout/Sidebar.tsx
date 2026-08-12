@@ -22,6 +22,7 @@ import {
   X,
   CheckSquare,
   Megaphone,
+  Bed,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useLayoutStore } from '../../stores/layoutStore';

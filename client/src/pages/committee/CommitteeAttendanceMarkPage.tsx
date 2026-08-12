@@ -235,12 +235,24 @@ export default function CommitteeAttendanceMarkPage() {
             <div style={{ marginBottom: 20 }}>
               <QRScanner
                 onScanSuccess={(text) => {
-                  toast.success(`Scanned QR successfully!`);
-                  // To be wired to backend in commit 14
-                  console.log('Decoded QR:', text);
+                  try {
+                    // Extract payload from JWT (header.payload.signature)
+                    const payloadBase64 = text.split('.')[1];
+                    const payload = JSON.parse(atob(payloadBase64));
+                    
+                    if (payload && payload.userId) {
+                      markSingle(payload.userId, 'PRESENT');
+                      toast.success(`Scanned QR for ${payload.name || 'Student'}`);
+                    } else {
+                      toast.error('Invalid QR Code format');
+                    }
+                  } catch (err) {
+                    toast.error('Failed to decode QR Code');
+                    console.error('QR Decode Error:', err);
+                  }
                 }}
                 onScanFailure={(err) => {
-                  console.error('QR Scan Error:', err);
+                  // Ignored as scanner fires continuously until success
                 }}
               />
             </div>
