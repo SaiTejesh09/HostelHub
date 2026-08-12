@@ -51,6 +51,7 @@ const committeeNav: NavItem[] = [
   { to: '/committee/dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
   { to: '/committee/menu', icon: <UtensilsCrossed size={18} />, label: 'Menu' },
   { to: '/committee/complaints', icon: <MessageSquare size={18} />, label: 'Complaints' },
+  { to: '/committee/issues', icon: <Wrench size={18} />, label: 'Maintenance' },
   { to: '/committee/rebates', icon: <Calendar size={18} />, label: 'Rebates' },
   { to: '/committee/attendance/mark', icon: <CheckSquare size={18} />, label: 'Mark Attendance' },
   { to: '/committee/inventory', icon: <Package size={18} />, label: 'Inventory' },

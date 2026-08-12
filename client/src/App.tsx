@@ -29,6 +29,7 @@ const BookingStatusPage = lazy(() => import('./pages/student/BookingStatusPage')
 // Committee pages
 const CommitteeDashboard = lazy(() => import('./pages/committee/CommitteeDashboard'));
 const CommitteeComplaintsPage = lazy(() => import('./pages/committee/CommitteeComplaintsPage'));
+const CommitteeIssuesPage = lazy(() => import('./pages/committee/CommitteeIssuesPage'));
 const CommitteeRebatesPage = lazy(() => import('./pages/committee/CommitteeRebatesPage'));
 const CommitteeMenuPage = lazy(() => import('./pages/committee/CommitteeMenuPage'));
 const InventoryPage = lazy(() => import('./pages/committee/InventoryPage'));
@@ -149,6 +150,11 @@ export default function App() {
             <Route path="/committee/complaints" element={
               <ProtectedRoute roles={['COMMITTEE', 'WARDEN']}>
                 <CommitteeComplaintsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/committee/issues" element={
+              <ProtectedRoute roles={['COMMITTEE', 'WARDEN']}>
+                <CommitteeIssuesPage />
               </ProtectedRoute>
             } />
             <Route path="/committee/rebates" element={
