@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, MessageSquare, Send, X, Wrench } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import api from '../../lib/api';
+import { getSocket } from '../../lib/socket';
 import { useAuthStore } from '../../stores/authStore';
 
 const CATEGORIES = [
@@ -75,15 +76,38 @@ export default function IssuesPage() {
     },
   });
 
-  const responseMutation = useMutation({
+  const addResponse = useMutation({
     mutationFn: ({ id, message }: { id: string; message: string }) =>
       api.post(`/issues/${id}/responses`, { message }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['issue-detail'] });
-      setResponse('');
-      toast.success('Response added');
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['issue-detail'] }); setResponse(''); toast.success('Response added'); },
   });
+
+  useEffect(() => {
+    const socket = getSocket();
+    
+    const handleStatusUpdated = (data: any) => {
+      qc.invalidateQueries({ queryKey: ['issues'] });
+      if (selectedIssue?.id === data.issueId) {
+        qc.invalidateQueries({ queryKey: ['issue-detail', data.issueId] });
+      }
+    };
+
+    const handleNewResponse = (data: any) => {
+      if (selectedIssue?.id === data.issueId) {
+        qc.invalidateQueries({ queryKey: ['issue-detail', data.issueId] });
+      } else {
+        qc.invalidateQueries({ queryKey: ['issues'] });
+      }
+    };
+
+    socket.on('issue:status_updated', handleStatusUpdated);
+    socket.on('issue:new_response', handleNewResponse);
+
+    return () => {
+      socket.off('issue:status_updated', handleStatusUpdated);
+      socket.off('issue:new_response', handleNewResponse);
+    };
+  }, [qc, selectedIssue]);
 
   const { data: detail } = useQuery({
     queryKey: ['issue-detail', selectedIssue?.id],
@@ -324,15 +348,15 @@ export default function IssuesPage() {
                   onChange={(e) => setResponse(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && response.trim()) {
-                      responseMutation.mutate({ id: selectedIssue.id, message: response });
+                      addResponse.mutate({ id: selectedIssue.id, message: response });
                     }
                   }}
                   style={{ flex: 1 }}
                 />
                 <button
                   className="btn btn-primary"
-                  disabled={!response.trim() || responseMutation.isPending}
-                  onClick={() => responseMutation.mutate({ id: selectedIssue.id, message: response })}
+                  disabled={!response.trim() || addResponse.isPending}
+                  onClick={() => addResponse.mutate({ id: selectedIssue.id, message: response })}
                 >
                   <Send size={16} />
                 </button>

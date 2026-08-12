@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, X, Wrench } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import api from '../../lib/api';
+import { getSocket } from '../../lib/socket';
 
 const STATUSES = ['', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
 const statusColor: Record<string, string> = {
@@ -38,6 +39,30 @@ export default function CommitteeIssuesPage() {
       api.post(`/issues/${id}/responses`, { message }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['issue-detail'] }); setResponse(''); toast.success('Response added'); },
   });
+
+  useEffect(() => {
+    const socket = getSocket();
+    
+    const handleNewIssue = () => {
+      qc.invalidateQueries({ queryKey: ['committee-issues'] });
+    };
+
+    const handleNewResponse = (data: any) => {
+      if (selected?.id === data.issueId) {
+        qc.invalidateQueries({ queryKey: ['issue-detail', data.issueId] });
+      } else {
+        qc.invalidateQueries({ queryKey: ['committee-issues'] });
+      }
+    };
+
+    socket.on('issue:new_issue', handleNewIssue);
+    socket.on('issue:new_response', handleNewResponse);
+
+    return () => {
+      socket.off('issue:new_issue', handleNewIssue);
+      socket.off('issue:new_response', handleNewResponse);
+    };
+  }, [qc, selected]);
 
   return (
     <DashboardLayout title="Manage Issues">

@@ -17,6 +17,6 @@ router.get('/:id', issueController.getById);
 router.post('/:id/responses', issueController.addResponse);
 
 // Warden/Admin only routes
-router.patch('/:id/status', authorize(['WARDEN', 'ADMIN']), issueController.updateStatus);
+router.patch('/:id/status', authorize('WARDEN', 'ADMIN'), issueController.updateStatus);
 
 export default router;

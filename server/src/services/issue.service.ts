@@ -1,11 +1,14 @@
 import { PrismaClient, IssueCategory, IssueStatus } from '@prisma/client';
-import { AppError } from '../middleware/errorHandler';
+import { createError } from '../middleware/errorHandler';
+import { notificationService } from './notification.service';
+import { io } from '../app';
+import { emitToRole } from '../sockets';
 
 const prisma = new PrismaClient();
 
 export class IssueService {
   async create(userId: string, data: { title: string; description: string; category: IssueCategory; location?: string; imageUrl?: string }) {
-    return prisma.issue.create({
+    const issue = await prisma.issue.create({
       data: {
         userId,
         ...data,
@@ -14,6 +17,12 @@ export class IssueService {
         user: { select: { id: true, email: true, studentProfile: { select: { name: true, roomNumber: true } } } },
       },
     });
+
+    // Notify committee/warden of new issue
+    emitToRole(io, 'WARDEN', 'issue:new_issue', issue);
+    emitToRole(io, 'COMMITTEE', 'issue:new_issue', issue);
+
+    return issue;
   }
 
   async getAll(query: { page?: number; limit?: number; status?: IssueStatus; category?: IssueCategory; userId?: string }) {
@@ -66,11 +75,11 @@ export class IssueService {
     });
 
     if (!issue) {
-      throw new AppError(404, 'Issue not found');
+      throw createError('Issue not found', 404);
     }
 
     if (role === 'STUDENT' && issue.userId !== userId) {
-      throw new AppError(403, 'Not authorized to view this issue');
+      throw createError('Not authorized to view this issue', 403);
     }
 
     return issue;
@@ -79,22 +88,39 @@ export class IssueService {
   async updateStatus(id: string, status: IssueStatus) {
     const issue = await prisma.issue.findUnique({ where: { id } });
     if (!issue) {
-      throw new AppError(404, 'Issue not found');
+      throw createError('Issue not found', 404);
     }
 
-    return prisma.issue.update({
+    const updated = await prisma.issue.update({
       where: { id },
       data: { status },
     });
+
+    // Emit realtime socket event
+    io.to(`user:${issue.userId}`).emit('issue:status_updated', {
+      issueId: id,
+      title: issue.title,
+      status,
+    });
+
+    // Create in-app notification
+    await notificationService.create({
+      userId: issue.userId,
+      title: 'Issue Status Updated',
+      message: `Your issue "${issue.title}" is now ${status.replace('_', ' ')}.`,
+      type: 'GENERAL',
+    });
+
+    return updated;
   }
 
   async addResponse(id: string, userId: string, message: string) {
     const issue = await prisma.issue.findUnique({ where: { id } });
     if (!issue) {
-      throw new AppError(404, 'Issue not found');
+      throw createError('Issue not found', 404);
     }
 
-    return prisma.issueResponse.create({
+    const response = await prisma.issueResponse.create({
       data: {
         issueId: id,
         userId,
@@ -104,6 +130,37 @@ export class IssueService {
         user: { select: { id: true, role: true, studentProfile: { select: { name: true } } } },
       },
     });
+
+    if (userId !== issue.userId) {
+      // Emit realtime socket event
+      io.to(`user:${issue.userId}`).emit('issue:new_response', {
+        issueId: id,
+        title: issue.title,
+        message: response.message,
+      });
+
+      // Create in-app notification
+      await notificationService.create({
+        userId: issue.userId,
+        title: 'New Update on Issue',
+        message: `There is a new update on your issue "${issue.title}".`,
+        type: 'GENERAL',
+      });
+    } else {
+      // If student is responding, notify wardens
+      emitToRole(io, 'WARDEN', 'issue:new_response', {
+        issueId: id,
+        title: issue.title,
+        message: response.message,
+      });
+      emitToRole(io, 'COMMITTEE', 'issue:new_response', {
+        issueId: id,
+        title: issue.title,
+        message: response.message,
+      });
+    }
+
+    return response;
   }
 
   async getStats() {
