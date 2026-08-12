@@ -23,6 +23,7 @@ import {
   CheckSquare,
   Megaphone,
   Bed,
+  Wrench,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useLayoutStore } from '../../stores/layoutStore';
@@ -38,6 +39,7 @@ const studentNav: NavItem[] = [
   { to: '/student/dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
   { to: '/student/menu', icon: <UtensilsCrossed size={18} />, label: 'Menu' },
   { to: '/student/complaints', icon: <MessageSquare size={18} />, label: 'Complaints' },
+  { to: '/student/issues', icon: <Wrench size={18} />, label: 'Maintenance' },
   { to: '/student/rebates', icon: <Calendar size={18} />, label: 'Rebates' },
   { to: '/student/attendance', icon: <ClipboardList size={18} />, label: 'Attendance' },
   { to: '/student/announcements', icon: <Megaphone size={18} />, label: 'Notice Board' },

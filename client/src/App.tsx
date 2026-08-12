@@ -17,6 +17,7 @@ const CompleteProfilePage = lazy(() => import('./pages/auth/CompleteProfilePage'
 // Student pages
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
 const ComplaintsPage = lazy(() => import('./pages/student/ComplaintsPage'));
+const IssuesPage = lazy(() => import('./pages/student/IssuesPage'));
 const RebatesPage = lazy(() => import('./pages/student/RebatesPage'));
 const MenuPage = lazy(() => import('./pages/student/MenuPage'));
 const AttendancePage = lazy(() => import('./pages/student/AttendancePage'));
@@ -96,6 +97,11 @@ export default function App() {
             <Route path="/student/complaints" element={
               <ProtectedRoute roles={['STUDENT']}>
                 <ComplaintsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/issues" element={
+              <ProtectedRoute roles={['STUDENT']}>
+                <IssuesPage />
               </ProtectedRoute>
             } />
             <Route path="/student/rebates" element={
