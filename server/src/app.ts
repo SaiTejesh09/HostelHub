@@ -12,6 +12,7 @@ import env from './config/env';
 import { connectDB } from './config/database';
 import { connectRedis } from './config/redis';
 import { logger } from './utils/logger';
+import { notificationService } from './services/notification.service';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import { initSocketHandlers } from './sockets';
 import { startBackgroundJobs } from './jobs';
@@ -48,6 +49,7 @@ const io = new Server(httpServer, {
 });
 
 initSocketHandlers(io);
+notificationService.setSocketServer(io);
 
 // ── Security Middleware ────────────────────────────────────────────────────
 app.use(

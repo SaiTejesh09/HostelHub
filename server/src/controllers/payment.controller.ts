@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { paymentService } from '../services/payment.service';
+import { notificationService } from '../services/notification.service';
 import { AuthRequest } from '../middleware/auth';
 import { createError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
@@ -137,6 +138,14 @@ export const paymentController = {
 
         return { invoice: updatedInvoice, payment: updatedPayment };
       });
+
+      // Send realtime in-app notification to student
+      await notificationService.createPaymentNotification(
+        result.invoice.userId,
+        result.invoice.amount,
+        result.invoice.type,
+        true
+      ).catch((err) => logger.warn('Failed to dispatch payment notification:', err));
 
       res.json({ success: true, data: result });
     } catch (error: any) {

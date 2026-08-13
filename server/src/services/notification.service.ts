@@ -4,6 +4,7 @@ import { abacPolicies } from '../config/permissions';
 import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 import { getRedisClient } from '../config/redis';
 import { logger } from '../utils/logger';
+import type { Server } from 'socket.io';
 
 type NotifType = 'ANNOUNCEMENT' | 'COMPLAINT_UPDATE' | 'REBATE_UPDATE' | 'MEAL_REMINDER' | 'EMERGENCY' | 'GENERAL';
 
@@ -23,6 +24,11 @@ async function publishEmailNotification(to: string, subject: string, html: strin
 }
 
 export class NotificationService {
+  private io?: Server;
+
+  setSocketServer(io: Server) {
+    this.io = io;
+  }
 
   // ── Create in-app notification ─────────────────────────────────────────────
   async create(data: {
@@ -49,6 +55,15 @@ export class NotificationService {
       publishEmailNotification(data.email.to, data.email.subject, data.email.html);
     }
 
+    // Realtime Socket.IO emission to the user
+    if (this.io) {
+      try {
+        this.io.to(`user:${data.userId}`).emit('notification:new', notification);
+      } catch (err) {
+        logger.warn('Failed to emit realtime notification:', err);
+      }
+    }
+
     return notification;
   }
 
@@ -71,6 +86,20 @@ export class NotificationService {
         metadata: data.metadata ? (data.metadata as any) : undefined,
       })),
     });
+
+    // Realtime Socket.IO emission to the target role
+    if (this.io) {
+      try {
+        this.io.to(`role:${role}`).emit('notification:new', {
+          title: data.title,
+          message: data.message,
+          type: data.type || 'ANNOUNCEMENT',
+          createdAt: new Date().toISOString(),
+        });
+      } catch (err) {
+        logger.warn('Failed to emit realtime role notification:', err);
+      }
+    }
 
     return { count: notifications.count };
   }
@@ -139,6 +168,40 @@ export class NotificationService {
     }
 
     return prisma.notification.delete({ where: { id } });
+  }
+
+  // ── Helper: Payment Notification ──────────────────────────────────────────
+  async createPaymentNotification(userId: string, invoiceAmount: number, invoiceType: string, isPaid: boolean) {
+    return this.create({
+      userId,
+      title: isPaid ? 'Payment Confirmed ✓' : 'New Fee Invoice Generated 💳',
+      message: isPaid
+        ? `Your payment of ₹${invoiceAmount} for ${invoiceType.replace('_', ' ')} has been successfully processed.`
+        : `A new invoice of ₹${invoiceAmount} for ${invoiceType.replace('_', ' ')} has been posted to your account.`,
+      type: 'GENERAL',
+      metadata: { invoiceAmount, invoiceType, isPaid },
+    });
+  }
+
+  // ── Get Notification Stats (Admin/Committee) ─────────────────────────────
+  async getStats() {
+    const [total, unread, byType] = await Promise.all([
+      prisma.notification.count(),
+      prisma.notification.count({ where: { isRead: false } }),
+      prisma.notification.groupBy({
+        by: ['type'],
+        _count: { type: true },
+      }),
+    ]);
+
+    return {
+      total,
+      unread,
+      byType: byType.reduce((acc, curr) => {
+        acc[curr.type] = curr._count.type;
+        return acc;
+      }, {} as Record<string, number>),
+    };
   }
 }
 
