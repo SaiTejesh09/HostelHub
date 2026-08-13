@@ -208,3 +208,133 @@ export async function sendNotificationEmail(
 
   await sendEmail(to, `🔔 ${title}`, html);
 }
+
+// ── 5. Payment Receipt Email ──────────────────────────────────────────────────
+export async function sendPaymentReceiptEmail(
+  to: string,
+  name: string,
+  details: {
+    receiptNumber: string;
+    amount: number;
+    description: string;
+    type: string;
+    transactionId: string;
+    method: string;
+    paidAt: string;
+  }
+): Promise<void> {
+  const html = `
+  <div style="${baseStyle}">
+    <div style="${cardStyle}">
+      ${logoHtml}
+      <div style="text-align:center;margin-bottom:20px;">
+        <span style="font-size:40px;">💳</span>
+        <h3 style="color:#0f2a45;font-size:20px;font-weight:700;margin:8px 0 4px;">Payment Confirmed</h3>
+        <p style="color:#10b981;font-weight:700;font-size:16px;margin:0;">PAID — ₹${details.amount}</p>
+      </div>
+
+      <p style="color:#475569;line-height:1.6;margin:0 0 20px;">
+        Hi <strong>${name}</strong>, thank you for your payment. Here is your official payment confirmation receipt.
+      </p>
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;">
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:8px 0;color:#64748b;">Receipt No:</td>
+          <td style="padding:8px 0;font-weight:700;text-align:right;color:#0f2a45;">${details.receiptNumber}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:8px 0;color:#64748b;">Description:</td>
+          <td style="padding:8px 0;font-weight:600;text-align:right;color:#0f2a45;">${details.description || details.type}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:8px 0;color:#64748b;">Payment Method:</td>
+          <td style="padding:8px 0;font-weight:600;text-align:right;color:#0f2a45;">${details.method}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:8px 0;color:#64748b;">Transaction ID:</td>
+          <td style="padding:8px 0;font-family:monospace;font-size:11px;text-align:right;color:#0f2a45;">${details.transactionId}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#64748b;">Paid Date:</td>
+          <td style="padding:8px 0;text-align:right;color:#0f2a45;">${details.paidAt}</td>
+        </tr>
+      </table>
+
+      <div style="text-align:center;margin-top:24px;">
+        <a href="${env.APP_URL}/student/fees" style="${btnStyle}">View Invoices & Receipts</a>
+      </div>
+
+      <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;" />
+      <p style="color:#94a3b8;font-size:11px;margin:0;text-align:center;">
+        This is a computer-generated receipt from SmartHostel.
+      </p>
+    </div>
+  </div>`;
+
+  await sendEmail(to, `🧾 Payment Receipt: ₹${details.amount} (${details.receiptNumber})`, html);
+}
+
+// ── 6. Maintenance Issue Update Email ─────────────────────────────────────────
+export async function sendMaintenanceIssueUpdateEmail(
+  to: string,
+  name: string,
+  details: {
+    issueTitle: string;
+    category: string;
+    status: string;
+    location?: string;
+  }
+): Promise<void> {
+  const statusColor = details.status === 'RESOLVED' ? '#10b981' : details.status === 'IN_PROGRESS' ? '#f59e0b' : '#3b82f6';
+  
+  const html = `
+  <div style="${baseStyle}">
+    <div style="${cardStyle}">
+      ${logoHtml}
+      <h3 style="color:#0f2a45;font-size:20px;font-weight:700;margin:0 0 12px;">
+        🔧 Maintenance Status Updated
+      </h3>
+      <p style="color:#475569;line-height:1.6;margin:0 0 20px;">
+        Hi <strong>${name}</strong>, your maintenance request <strong>"${details.issueTitle}"</strong> status has been updated.
+      </p>
+
+      <div style="background:#f8fafc;border-left:4px solid ${statusColor};padding:16px;border-radius:8px;margin-bottom:20px;">
+        <div style="font-size:12px;color:#64748b;text-transform:uppercase;font-weight:700;">New Status</div>
+        <div style="font-size:18px;font-weight:800;color:${statusColor};marginTop:4px;">${details.status.replace('_', ' ')}</div>
+        ${details.location ? `<div style="font-size:13px;color:#475569;margin-top:6px;">Location: ${details.location}</div>` : ''}
+      </div>
+
+      <div style="text-align:center;">
+        <a href="${env.APP_URL}/student/issues" style="${btnStyle}">View Issue Details</a>
+      </div>
+    </div>
+  </div>`;
+
+  await sendEmail(to, `🔧 Maintenance Update: ${details.issueTitle} [${details.status}]`, html);
+}
+
+// ── 7. Announcement Broadcast Email ──────────────────────────────────────────
+export async function sendAnnouncementEmail(
+  to: string,
+  title: string,
+  content: string,
+  priority: string = 'MEDIUM'
+): Promise<void> {
+  const html = `
+  <div style="${baseStyle}">
+    <div style="${cardStyle}">
+      ${logoHtml}
+      <div style="display:inline-block;background:#e0e7ff;color:#4338ca;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;margin-bottom:12px;text-transform:uppercase;">
+        📢 Announcement • ${priority}
+      </div>
+      <h3 style="color:#0f2a45;font-size:20px;font-weight:700;margin:0 0 12px;">${title}</h3>
+      <p style="color:#475569;line-height:1.6;margin:0 0 24px;white-space:pre-line;">${content}</p>
+      <div style="text-align:center;">
+        <a href="${env.APP_URL}/student/announcements" style="${btnStyle}">Open Notice Board</a>
+      </div>
+    </div>
+  </div>`;
+
+  await sendEmail(to, `📢 Announcement: ${title}`, html);
+}
+

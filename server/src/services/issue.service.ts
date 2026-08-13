@@ -1,6 +1,8 @@
 import { PrismaClient, IssueCategory, IssueStatus } from '@prisma/client';
 import { createError } from '../middleware/errorHandler';
 import { notificationService } from './notification.service';
+import { sendMaintenanceIssueUpdateEmail } from '../utils/email';
+import { logger } from '../utils/logger';
 import { io } from '../app';
 import { emitToRole } from '../sockets';
 
@@ -110,6 +112,16 @@ export class IssueService {
       message: `Your issue "${issue.title}" is now ${status.replace('_', ' ')}.`,
       type: 'GENERAL',
     });
+
+    // Send Nodemailer email notification
+    if (issue.user?.email) {
+      sendMaintenanceIssueUpdateEmail(issue.user.email, issue.user.studentProfile?.name || 'Student', {
+        issueTitle: issue.title,
+        category: issue.category,
+        status,
+        location: issue.location || undefined,
+      }).catch((err) => logger.warn('Failed to send maintenance update email:', err));
+    }
 
     return updated;
   }

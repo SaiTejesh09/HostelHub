@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import { createError } from '../middleware/errorHandler';
 import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
+import { sendAnnouncementEmail } from '../utils/email';
 import { logger } from '../utils/logger';
 
 type AnnouncementCategory = 'GENERAL' | 'ACADEMIC' | 'MAINTENANCE' | 'EVENT' | 'EMERGENCY';
@@ -62,6 +63,22 @@ export class AnnouncementService {
     });
 
     logger.info(`Announcement created: ${announcement.id} by ${authorId}`);
+
+    // If URGENT or HIGH priority, trigger email notifications asynchronously
+    if (['HIGH', 'URGENT'].includes(announcement.priority)) {
+      prisma.user.findMany({
+        where: { isActive: true, role: { in: announcement.targetRoles as any[] } },
+        select: { email: true }
+      }).then((users) => {
+        users.forEach((u) => {
+          if (u.email) {
+            sendAnnouncementEmail(u.email, announcement.title, announcement.content, announcement.priority)
+              .catch((err) => logger.warn('Failed to send announcement email:', err));
+          }
+        });
+      }).catch((err) => logger.warn('Failed to fetch users for announcement email broadcast:', err));
+    }
+
     return announcement;
   }
 

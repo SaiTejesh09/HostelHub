@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { paymentService } from '../services/payment.service';
 import { notificationService } from '../services/notification.service';
+import { sendPaymentReceiptEmail } from '../utils/email';
 import { AuthRequest } from '../middleware/auth';
 import { createError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
@@ -146,6 +147,23 @@ export const paymentController = {
         result.invoice.type,
         true
       ).catch((err) => logger.warn('Failed to dispatch payment notification:', err));
+
+      // Send Nodemailer email payment receipt
+      const user = await prisma.user.findUnique({
+        where: { id: result.invoice.userId },
+        include: { studentProfile: true }
+      });
+      if (user?.email) {
+        sendPaymentReceiptEmail(user.email, user.studentProfile?.name || 'Student', {
+          receiptNumber: `RCP-${result.invoice.id.slice(0, 8).toUpperCase()}`,
+          amount: result.invoice.amount,
+          description: result.invoice.description || result.invoice.type,
+          type: result.invoice.type,
+          transactionId: result.payment.razorpayPaymentId || result.payment.transactionId || 'N/A',
+          method: result.payment.method,
+          paidAt: new Date().toLocaleString(),
+        }).catch((err) => logger.warn('Failed to send payment receipt email:', err));
+      }
 
       res.json({ success: true, data: result });
     } catch (error: any) {
