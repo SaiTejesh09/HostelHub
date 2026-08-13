@@ -4,7 +4,7 @@ import { paymentService } from '../services/payment.service';
 import { AuthRequest } from '../middleware/auth';
 import { createError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -44,7 +44,7 @@ export const paymentController = {
       if (invoice.status === 'CANCELLED') throw createError('Invoice is cancelled', 400);
 
       // Create a pending Payment record
-      const transactionId = `txn_${uuidv4().replace(/-/g, '')}`;
+      const transactionId = `txn_${crypto.randomUUID().replace(/-/g, '')}`;
       
       const payment = await prisma.payment.create({
         data: {
