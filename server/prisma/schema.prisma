@@ -130,6 +130,35 @@ enum AttendanceType {
   EVENT
 }
 
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  RAZORPAY
+  CASH
+  BANK_TRANSFER
+  UPI
+}
+
+enum InvoiceType {
+  TUITION
+  HOSTEL_RENT
+  MESS_FEE
+  FINE
+  OTHER
+}
+
 // ========================
 // CORE MODELS
 // ========================
@@ -160,6 +189,8 @@ model User {
   announcements   Announcement[]
   issues          Issue[]
   issueResponses  IssueResponse[]
+  invoices        Invoice[]
+  payments        Payment[]
 
   @@index([email])
   @@index([role])
@@ -435,13 +466,13 @@ model Issue {
   description String
   category    IssueCategory
   status      IssueStatus   @default(OPEN)
-  location    String?       
+  location    String?
   imageUrl    String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  responses   IssueResponse[]
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses IssueResponse[]
 
   @@index([userId])
   @@index([status])
@@ -449,14 +480,14 @@ model Issue {
 }
 
 model IssueResponse {
-  id          String   @id @default(uuid())
-  issueId     String
-  userId      String
-  message     String
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  issueId   String
+  userId    String
+  message   String
+  createdAt DateTime @default(now())
 
-  issue       Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([issueId])
 }
@@ -694,4 +725,50 @@ model Announcement {
   @@index([priority])
   @@index([isPinned, isActive])
   @@index([isActive, createdAt])
+}
+
+// ========================
+// PAYMENTS & INVOICES
+// ========================
+
+model Invoice {
+  id          String        @id @default(uuid())
+  userId      String
+  type        InvoiceType   @default(OTHER)
+  amount      Float
+  description String?
+  status      InvoiceStatus @default(PENDING)
+  dueDate     DateTime
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@index([dueDate])
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  invoiceId         String
+  userId            String
+  amount            Float
+  method            PaymentMethod
+  status            PaymentStatus @default(PENDING)
+  transactionId     String?       @unique
+  razorpayOrderId   String?       @unique
+  razorpayPaymentId String?       @unique
+  razorpaySignature String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([userId])
+  @@index([status])
 }
