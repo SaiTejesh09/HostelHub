@@ -88,7 +88,12 @@ export class IssueService {
   }
 
   async updateStatus(id: string, status: IssueStatus) {
-    const issue = await prisma.issue.findUnique({ where: { id } });
+    const issue = await prisma.issue.findUnique({
+      where: { id },
+      include: {
+        user: { select: { email: true, studentProfile: { select: { name: true } } } },
+      },
+    });
     if (!issue) {
       throw createError('Issue not found', 404);
     }
