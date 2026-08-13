@@ -18,6 +18,7 @@ const CompleteProfilePage = lazy(() => import('./pages/auth/CompleteProfilePage'
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
 const ComplaintsPage = lazy(() => import('./pages/student/ComplaintsPage'));
 const IssuesPage = lazy(() => import('./pages/student/IssuesPage'));
+const FeePaymentPage = lazy(() => import('./pages/student/FeePaymentPage'));
 const RebatesPage = lazy(() => import('./pages/student/RebatesPage'));
 const MenuPage = lazy(() => import('./pages/student/MenuPage'));
 const AttendancePage = lazy(() => import('./pages/student/AttendancePage'));

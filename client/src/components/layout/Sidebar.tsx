@@ -24,6 +24,8 @@ import {
   Megaphone,
   Bed,
   Wrench,
+  CreditCard,
+  Receipt,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useLayoutStore } from '../../stores/layoutStore';
@@ -40,7 +42,8 @@ const studentNav: NavItem[] = [
   { to: '/student/menu', icon: <UtensilsCrossed size={18} />, label: 'Menu' },
   { to: '/student/complaints', icon: <MessageSquare size={18} />, label: 'Complaints' },
   { to: '/student/issues', icon: <Wrench size={18} />, label: 'Maintenance' },
-  { to: '/student/rebates', icon: <Calendar size={18} />, label: 'Rebates' },
+  { to: '/student/fees', icon: <CreditCard size={18} />, label: 'Fees & Payments' },
+  { to: '/student/rebates', icon: <Receipt size={18} />, label: 'Rebates' },
   { to: '/student/attendance', icon: <ClipboardList size={18} />, label: 'Attendance' },
   { to: '/student/announcements', icon: <Megaphone size={18} />, label: 'Notice Board' },
   { to: '/student/notifications', icon: <Bell size={18} />, label: 'Notifications' },
