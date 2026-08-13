@@ -143,5 +143,58 @@ export const paymentController = {
       logger.error('Error verifying payment:', error);
       res.status(error.statusCode || 500).json({ success: false, message: error.message || 'Server error' });
     }
+  },
+
+  // Get receipt for a specific invoice (must be PAID)
+  getReceipt: async (req: AuthRequest, res: Response) => {
+    try {
+      const invoiceId = req.params.id as string;
+      const userId = req.user!.userId;
+
+      const invoice = await prisma.invoice.findFirst({
+        where: { id: invoiceId, userId },
+        include: {
+          payments: {
+            where: { status: 'SUCCESS' },
+            orderBy: { createdAt: 'desc' },
+            take: 1
+          },
+          user: {
+            select: {
+              email: true,
+              studentProfile: {
+                select: { name: true, rollNumber: true, roomNumber: true, department: true, year: true }
+              }
+            }
+          }
+        }
+      });
+
+      if (!invoice) throw createError('Invoice not found', 404);
+      if (invoice.status !== 'PAID') throw createError('Receipt is only available for paid invoices', 400);
+
+      const payment = invoice.payments[0];
+
+      res.json({
+        success: true,
+        data: {
+          receiptNumber: `RCP-${invoice.id.slice(0, 8).toUpperCase()}`,
+          invoiceId: invoice.id,
+          type: invoice.type,
+          description: invoice.description,
+          amount: invoice.amount,
+          paidAt: payment?.updatedAt,
+          transactionId: payment?.razorpayPaymentId || payment?.transactionId,
+          method: payment?.method,
+          student: invoice.user.studentProfile,
+          email: invoice.user.email,
+          dueDate: invoice.dueDate,
+          createdAt: invoice.createdAt
+        }
+      });
+    } catch (error: any) {
+      logger.error('Error fetching receipt:', error);
+      res.status(error.statusCode || 500).json({ success: false, message: error.message || 'Server error' });
+    }
   }
 };

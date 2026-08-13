@@ -19,6 +19,7 @@ const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
 const ComplaintsPage = lazy(() => import('./pages/student/ComplaintsPage'));
 const IssuesPage = lazy(() => import('./pages/student/IssuesPage'));
 const FeePaymentPage = lazy(() => import('./pages/student/FeePaymentPage'));
+const PaymentReceiptPage = lazy(() => import('./pages/student/PaymentReceiptPage'));
 const RebatesPage = lazy(() => import('./pages/student/RebatesPage'));
 const MenuPage = lazy(() => import('./pages/student/MenuPage'));
 const AttendancePage = lazy(() => import('./pages/student/AttendancePage'));
@@ -139,6 +140,16 @@ export default function App() {
             <Route path="/student/bookings" element={
               <ProtectedRoute roles={['STUDENT']}>
                 <BookingStatusPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/fees" element={
+              <ProtectedRoute roles={['STUDENT']}>
+                <FeePaymentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/fees/receipt/:id" element={
+              <ProtectedRoute roles={['STUDENT']}>
+                <PaymentReceiptPage />
               </ProtectedRoute>
             } />
 

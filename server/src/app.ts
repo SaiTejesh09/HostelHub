@@ -151,7 +151,6 @@ app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1/announcements', announcementRoutes);
 app.use('/api/v1/rooms', roomRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
-app.use('/api/v1/issues', issueRoutes);
 
 // ── 404 & Error Handling ───────────────────────────────────────────────────
 app.use(notFound);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CreditCard, Receipt, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CreditCard, Receipt, Clock, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import api from '../../lib/api';
@@ -30,6 +31,7 @@ const statusColors: Record<string, string> = {
 
 export default function FeePaymentPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   const { data: invoices, isLoading } = useQuery({
@@ -177,6 +179,16 @@ export default function FeePaymentPage() {
                             Pay Now
                           </>
                         )}
+                      </button>
+                    )}
+                    {invoice.status === 'PAID' && (
+                      <button
+                        className="btn-secondary"
+                        onClick={() => navigate(`/student/fees/receipt/${invoice.id}`)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                      >
+                        <Receipt size={18} />
+                        View Receipt
                       </button>
                     )}
                   </div>
