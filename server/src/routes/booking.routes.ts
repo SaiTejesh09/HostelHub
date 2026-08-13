@@ -8,6 +8,8 @@ router.use(authenticate);
 
 // Get bookings (filtered by student/room/status)
 router.get('/', bookingController.getBookings.bind(bookingController));
+// My bookings alias for student
+router.get('/my', bookingController.getBookings.bind(bookingController));
 
 // Get single booking by ID
 router.get('/:id', bookingController.getBookingById.bind(bookingController));
