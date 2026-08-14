@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import { createError } from '../middleware/errorHandler';
 import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
+import cache from '../config/redis';
 import type {
   CreateMenuInput,
   CreateMealItemInput,
@@ -37,7 +38,11 @@ export class MenuService {
   }
 
   async getActiveMenu() {
-    return prisma.menu.findFirst({
+    const CACHE_KEY = 'menu:active';
+    const cached = await cache.get(CACHE_KEY);
+    if (cached) return cached;
+
+    const menu = await prisma.menu.findFirst({
       where: { isActive: true },
       include: {
         schedules: {
@@ -47,16 +52,25 @@ export class MenuService {
         },
       },
     });
+
+    if (menu) await cache.set(CACHE_KEY, menu, 600); // 10 min TTL
+    return menu;
   }
 
   async getTodaySchedule() {
     const today = new Date().getDay(); // 0-6
+    const CACHE_KEY = `menu:today:${today}`;
+    const cached = await cache.get(CACHE_KEY);
+    if (cached) return cached;
 
-    return prisma.mealSchedule.findMany({
+    const schedule = await prisma.mealSchedule.findMany({
       where: { dayOfWeek: today, isActive: true },
       include: { items: true, menu: { select: { name: true, id: true } } },
       orderBy: { mealType: 'asc' },
     });
+
+    await cache.set(CACHE_KEY, schedule, 1800); // 30 min TTL
+    return schedule;
   }
 
   async createMealItem(input: CreateMealItemInput) {
@@ -98,6 +112,8 @@ export class MenuService {
   async deleteMenu(id: string) {
     const menu = await prisma.menu.findUnique({ where: { id } });
     if (!menu) throw createError('Menu not found', 404);
+    await cache.del('menu:active');
+    await cache.delPattern('menu:today:*');
     return prisma.menu.update({ where: { id }, data: { isActive: false } });
   }
 }

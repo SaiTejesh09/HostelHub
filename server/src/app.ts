@@ -14,6 +14,7 @@ import { connectRedis } from './config/redis';
 import { logger } from './utils/logger';
 import { notificationService } from './services/notification.service';
 import { errorHandler, notFound } from './middleware/errorHandler';
+import { slowQueryLogger } from './middleware/performance';
 import { initSocketHandlers } from './sockets';
 import { startBackgroundJobs } from './jobs';
 
@@ -118,6 +119,7 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
+app.use(slowQueryLogger);
 
 // ── Health Check ───────────────────────────────────────────────────────────
 app.get('/api/v1/health', (_req, res) => {

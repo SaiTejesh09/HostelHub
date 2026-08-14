@@ -3,6 +3,7 @@ import { createError } from '../middleware/errorHandler';
 import { abacPolicies } from '../config/permissions';
 import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 import { getRedisClient } from '../config/redis';
+import cache from '../config/redis';
 import { logger } from '../utils/logger';
 import type { Server } from 'socket.io';
 
@@ -125,6 +126,14 @@ export class NotificationService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          message: true,
+          type: true,
+          isRead: true,
+          createdAt: true,
+        },
       }),
       prisma.notification.count({ where }),
     ]);
@@ -153,9 +162,15 @@ export class NotificationService {
     });
   }
 
-  // ── Unread count ───────────────────────────────────────────────────────────
+  // ── Unread count (with short Redis cache) ─────────────────────────────────
   async getUnreadCount(userId: string) {
-    return prisma.notification.count({ where: { userId, isRead: false } });
+    const CACHE_KEY = `notif:unread:${userId}`;
+    const cached = await cache.get<number>(CACHE_KEY);
+    if (cached !== null) return cached;
+
+    const count = await prisma.notification.count({ where: { userId, isRead: false } });
+    await cache.set(CACHE_KEY, count, 30); // 30s TTL
+    return count;
   }
 
   // ── Delete (ABAC: only own) ────────────────────────────────────────────────
