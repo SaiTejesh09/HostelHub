@@ -114,7 +114,7 @@ export default function StudentDashboard() {
           />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24 }}>
+        <div className="dashboard-grid">
           {/* Attendance Chart */}
           <div className="card" style={{ padding: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>

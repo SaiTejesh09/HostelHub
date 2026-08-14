@@ -505,10 +505,29 @@ body {
 .gap-3           { gap: 12px; }
 .gap-4           { gap: 16px; }
 
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* ── Responsive Dashboard Grids ── */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.dashboard-grid-equal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.dashboard-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.dashboard-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }
 
 /* ══════════════════════════════════════════
@@ -572,6 +591,15 @@ body {
   /* All grids collapse to 1 column */
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
 
+  /* Dashboard grids stack on mobile */
+  .dashboard-grid,
+  .dashboard-grid-equal,
+  .dashboard-grid-3,
+  .dashboard-grid-4 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
   /* Modal full-screen on mobile */
   .modal-overlay { padding: 0; align-items: flex-end; }
   .modal {
@@ -588,6 +616,23 @@ body {
   /* Buttons */
   .btn { font-size: 13px; padding: 9px 16px; }
   .btn-sm { padding: 5px 12px; font-size: 11px; }
+
+  /* Navbar search — narrower on mobile */
+  .navbar-header input[placeholder="Search pages..."] {
+    max-width: 140px;
+  }
+
+  /* Notification dropdown fills screen width */
+  .notif-dropdown-panel {
+    width: calc(100vw - 32px) !important;
+    right: -60px !important;
+  }
+
+  /* Card padding reduced */
+  .card { padding: 16px; }
+
+  /* Hide chart legend text on very small screens */
+  .chart-legend-text { display: none; }
 }
 
 @media (max-width: 480px) {
@@ -602,6 +647,15 @@ body {
   .modal-body { padding: 16px; }
   .modal-header { padding: 14px 16px; }
   .modal-footer { padding: 12px 16px; gap: 8px; }
+
+  /* Stack stats on very small phones */
+  .stats-grid-stack {
+    grid-template-columns: 1fr;
+  }
+
+  /* Reduce header font sizes */
+  .page-title { font-size: 18px; }
+  .page-subtitle { font-size: 12px; }
 }
 
 /* ══════════════════════════════
@@ -611,8 +665,25 @@ body {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
   .grid-3 { grid-template-columns: repeat(2, 1fr); }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-grid-equal {
+    grid-template-columns: 1fr 1fr;
+  }
+  .dashboard-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dashboard-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (min-width: 1025px) and (max-width: 1200px) {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
+
+  .dashboard-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

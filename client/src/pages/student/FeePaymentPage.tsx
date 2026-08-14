@@ -95,8 +95,8 @@ export default function FeePaymentPage() {
     <DashboardLayout title="Fee Payments">
       <div className="page" style={{ padding: '24px 20px', maxWidth: 1000, margin: '0 auto' }}>
         
-        <div style={{ display: 'flex', gap: 24, marginBottom: 32 }}>
-          <div className="stat-card" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div className="dashboard-grid-equal" style={{ marginBottom: 32 }}>
+          <div className="stat-card" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: 'rgba(255, 152, 0, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Clock size={24} color="var(--warning-main)" />
             </div>
@@ -107,7 +107,7 @@ export default function FeePaymentPage() {
               </h3>
             </div>
           </div>
-          <div className="stat-card" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className="stat-card" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: 'rgba(76, 175, 80, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <CheckCircle size={24} color="var(--success-main)" />
             </div>
@@ -140,10 +140,12 @@ export default function FeePaymentPage() {
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between',
-                  padding: '16px 24px',
+                  padding: '16px 20px',
                   borderRadius: 12,
                   border: '1px solid var(--border-color)',
-                  backgroundColor: 'var(--bg-surface)'
+                  backgroundColor: 'var(--bg-surface)',
+                  flexWrap: 'wrap',
+                  gap: 16
                 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

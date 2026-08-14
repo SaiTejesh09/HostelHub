@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
           <p className="page-subtitle">Hostel performance insights</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+        <div className="dashboard-grid-4" style={{ marginBottom: 28 }}>
           {[
             { label: 'Total Students', value: dashStats?.totalStudents || 0, color: '#6366f1' },
             { label: 'Open Complaints', value: dashStats?.openComplaints || 0, color: '#ef4444' },
@@ -40,7 +40,7 @@ export default function AnalyticsPage() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24 }}>
+        <div className="dashboard-grid">
           <div className="card" style={{ padding: 24 }}>
             <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Complaints (Last 30 Days)</h3>
             <ResponsiveContainer width="100%" height={240}>

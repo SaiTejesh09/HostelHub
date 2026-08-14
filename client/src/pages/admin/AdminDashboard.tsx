@@ -25,7 +25,7 @@ export default function AdminDashboard() {
           <StatCard title="Inventory Items" value={stats?.totalInventoryItems || 0} icon={<Package size={22} />} color="success" />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 8 }}>
+        <div className="dashboard-grid-equal" style={{ marginTop: 8 }}>
           {[
             { title: 'User Management', desc: 'Manage student and staff accounts', href: '/admin/users', icon: <Users size={24} />, color: '#6366f1' },
             { title: 'Hostel Blocks', desc: 'Manage rooms and blocks', href: '/admin/blocks', icon: <Building2 size={24} />, color: '#a855f7' },

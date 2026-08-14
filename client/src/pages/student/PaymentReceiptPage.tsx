@@ -74,7 +74,7 @@ export default function PaymentReceiptPage() {
           </div>
 
           {/* Student Info */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 32 }}>
+          <div className="dashboard-grid-equal" style={{ marginBottom: 32 }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 8 }}>Billed To</div>
               <div style={{ fontWeight: 700, fontSize: 16 }}>{receipt.student?.name || 'Student'}</div>
